@@ -60,7 +60,6 @@ contract RewardPackages is Ownable {
     }
 
     function disablePackage(uint id) external onlyOwner {
-        //todo enablePackage?
         packages[id].isActive = false;
     }
 
