@@ -102,13 +102,15 @@ contract RewardPackages is Ownable {
 
         // send tokens to user
         uint withdrawAmount = stake.tokenAmount + calculateRewards(stake);
-        token.transferFrom(address(this), msg.sender, withdrawAmount);
+        token.transfer(msg.sender, withdrawAmount);
         // todo event
     }
 
     function transferTokenForRewards(uint amount) external onlyOwner {
         token.transferFrom(msg.sender, address(this), amount);
     }
+
+    //todo getUserInfo() view
 
     // calculate rewards for stake
     function calculateRewards(Stake memory stake) public view returns (uint) {
