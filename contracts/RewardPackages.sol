@@ -8,13 +8,17 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract RewardPackages is Ownable {
     event PackageAdded(uint id, string name);
+    event PackageDisabled(uint id);
+    event RewardsAdded(uint amount);
+    event TokensDeposited(address userAddress, uint packageId, uint amount);
+    event TokensWithdrawn(address userAddress, uint packageId);
 
     // reward package struct; defined by owner
     struct Package {
         string name;
         bool isActive;
         uint lockTime; // lock time in seconds
-        uint awardFrequency; // award freqency (interval) in seconds
+        uint awardFrequency; // award capitalization frequency (interval) in seconds
         uint rewardPercentage; // 5 == 5%
         uint minDeposit;
         uint maxDeposit;
@@ -63,6 +67,7 @@ contract RewardPackages is Ownable {
 
     function disablePackage(uint id) external onlyOwner {
         packages[id].isActive = false;
+        emit PackageDisabled(id);
     }
 
     function depositTokens(uint packageId, uint tokenAmount) external {
@@ -82,7 +87,8 @@ contract RewardPackages is Ownable {
         usersStakes[msg.sender][packageId] = stake;
 
         token.transferFrom(msg.sender, address(this), tokenAmount);
-        //todo event
+        
+        emit TokensDeposited(msg.sender, packageId, tokenAmount);
     }
 
     // withdraw deposited + rewards
@@ -103,11 +109,13 @@ contract RewardPackages is Ownable {
         // send tokens to user
         uint withdrawAmount = stake.tokenAmount + calculateRewards(stake);
         token.transfer(msg.sender, withdrawAmount);
-        // todo event
+
+        emit TokensWithdrawn(msg.sender, packageId);
     }
 
     function transferTokenForRewards(uint amount) external onlyOwner {
         token.transferFrom(msg.sender, address(this), amount);
+        emit RewardsAdded(amount);
     }
 
     //todo getUserInfo() view
