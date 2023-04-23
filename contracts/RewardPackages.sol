@@ -39,12 +39,14 @@ contract RewardPackages is Ownable {
     uint public packagesAmount;
 
     // address, packageId => stake
-    mapping(address => mapping(uint => Stake)) usersStakes;
+    mapping(address => mapping(uint => Stake)) public usersStakes;
 
     constructor(address tokenParam) {
         require(tokenParam != address(0), "Token address can't be empty");
         token = IERC20(tokenParam);
     }
+
+    //todo organize func order
 
     function createPackage(Package memory package) external onlyOwner {
         packages[packagesAmount] = package;

@@ -1,8 +1,9 @@
 import { ethers } from "hardhat";
 import { RewardPackages } from "../../typechain-types";
+import { PromiseOrValue } from "../../typechain-types/common";
 
 // calculate staking rewards locally
-export async function calculateStakingRewards(stake: RewardPackages.StakeStruct, rewardPackage: RewardPackages.PackageStruct) {
+export function calculateStakingRewards(stake: RewardPackages.StakeStruct, rewardPackage: RewardPackages.PackageStruct) {
     const numberOfCapitalizations = ethers.BigNumber.from(rewardPackage.lockTime)
         .div(ethers.BigNumber.from(rewardPackage.awardFrequency));
     const reward = ethers.BigNumber.from(stake.tokenAmount)
@@ -10,6 +11,14 @@ export async function calculateStakingRewards(stake: RewardPackages.StakeStruct,
         .div(ethers.BigNumber.from(100).pow(numberOfCapitalizations))
     return reward.sub(ethers.BigNumber.from(stake.tokenAmount));
 }
+
+export function toBigNumber(num: PromiseOrValue<BigNumberish>) {
+    return ethers.BigNumber.from(num);
+}
+
+//
+// consts
+//
 
 const dayInSeconds = 60 * 60 * 24;
 

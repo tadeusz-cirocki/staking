@@ -5,7 +5,7 @@ import { deployFixture } from "./helpers/deployFixtures";
 
 describe("Reward Packages", function () {
 
-    describe.only("create package by owner", function () {
+    describe("create package by owner", function () {
         it("Should add packages as expected", async function () {
             const { reward } = await loadFixture(deployFixture);
 

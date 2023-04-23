@@ -5,7 +5,7 @@ import { deployFixture } from "./helpers/deployFixtures";
 
 describe("Reward Packages", function () {
 
-    describe.only("disable package by owner", function () {
+    describe("disable package by owner", function () {
         it("Should disable deposit on package if package disabled", async function () {
             const { reward } = await loadFixture(deployFixture);
 
