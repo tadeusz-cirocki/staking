@@ -1,6 +1,6 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { calculateStakingRewards, rewardPackage1, toBigNumber } from "./helpers/helpers";
+import { calculateStakingReward, rewardPackage1, toBigNumber } from "./helpers/helpers";
 import { deployFixture } from "./helpers/deployFixtures";
 import { RewardPackages } from "../typechain-types";
 import { ethers } from "hardhat";
@@ -55,10 +55,10 @@ describe("Reward Packages", function () {
             const stake: RewardPackages.StakeStruct = {
                 packageId: 0,
                 tokenAmount: ethers.utils.parseEther('1'),  // 1 token with 18 decimals
-                lockTimestamp: 1000
+                lockTimestamp: await time.latest()
             }
 
-            const expectedReward = calculateStakingRewards(stake, rewardPackage1);
+            const expectedReward = calculateStakingReward(stake, rewardPackage1);
             await token.approve(reward.address, ethers.constants.MaxUint256);
             // feed the contract but not enough
             await reward.transferTokenForRewards(expectedReward.sub(1));

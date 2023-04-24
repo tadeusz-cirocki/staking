@@ -2,9 +2,14 @@ import { ethers } from "hardhat";
 import { RewardPackages } from "../../typechain-types";
 import { PromiseOrValue } from "../../typechain-types/common";
 
-// calculate staking rewards locally
-export function calculateStakingRewards(stake: RewardPackages.StakeStruct, rewardPackage: RewardPackages.PackageStruct) {
-    const numberOfCapitalizations = ethers.BigNumber.from(rewardPackage.lockTime)
+// calculate staking reward locally (whole period)
+export function calculateStakingReward(stake: RewardPackages.StakeStruct, rewardPackage: RewardPackages.PackageStruct) {
+        return calculateStakingRewardForPeriod(stake, rewardPackage, (toBigNumber(rewardPackage.lockTime)).toNumber());
+}
+
+// e.g. get rewards for 2 weeks of staking
+export function calculateStakingRewardForPeriod(stake: RewardPackages.StakeStruct, rewardPackage: RewardPackages.PackageStruct, periodInSeconds: number) {
+    const numberOfCapitalizations = ethers.BigNumber.from(periodInSeconds)
         .div(ethers.BigNumber.from(rewardPackage.awardFrequency));
     const reward = ethers.BigNumber.from(stake.tokenAmount)
         .mul(ethers.BigNumber.from(rewardPackage.rewardPercentage).add(100).pow(numberOfCapitalizations))
@@ -20,7 +25,7 @@ export function toBigNumber(num: PromiseOrValue<BigNumberish>) {
 // consts
 //
 
-const dayInSeconds = 60 * 60 * 24;
+export const dayInSeconds = 60 * 60 * 24;
 
 export const rewardPackage1: RewardPackages.PackageStruct = {
     name: 'package1',

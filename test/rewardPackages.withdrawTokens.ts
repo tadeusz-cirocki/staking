@@ -1,10 +1,10 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { calculateStakingRewards, rewardPackage1, toBigNumber } from "./helpers/helpers";
+import { calculateStakingReward, rewardPackage1, toBigNumber } from "./helpers/helpers";
 import { deployFixture } from "./helpers/deployFixtures";
 import { ethers } from "hardhat";
 
-describe.only("Reward Packages", function () {
+describe("Reward Packages", function () {
 
     describe("withdraw tokens", function () {
         it("Should revert if provided with id of nonexistant package", async function () {
@@ -90,7 +90,7 @@ describe.only("Reward Packages", function () {
             await time.increaseTo(toBigNumber(rewardPackage1.lockTime).add(currentTimestamp));
 
             const rewardAmount =
-                calculateStakingRewards(await reward.usersStakes(owner.address, packageId), rewardPackage1);
+                calculateStakingReward(await reward.usersStakes(owner.address, packageId), rewardPackage1);
 
             const userBalanceBeforeWithdraw = await token.balanceOf(owner.address);
             const contractBalanceBeforeWithdraw = await token.balanceOf(reward.address);

@@ -31,6 +31,13 @@ contract RewardPackages is Ownable {
         uint lockTimestamp;
     }
 
+    // struct for getUserInfo() view
+    struct UserInfo {
+        uint depositedAmount;
+        uint rewardAmount;
+        uint unlockTimestamp;
+    }
+
     uint private constant rewardPrecision = 9; // it's decimals / 2 == 18 / 2 == 9
 
     // deposit, reward token
@@ -58,13 +65,6 @@ contract RewardPackages is Ownable {
         packagesAmount++;
     }
 
-    function getPackageInfo(
-        uint id
-    ) external view returns (Package memory package) {
-        require(id < packagesAmount, "Id too high");
-        return packages[id];
-    }
-
     function disablePackage(uint id) external onlyOwner {
         packages[id].isActive = false;
         emit PackageDisabled(id);
@@ -82,12 +82,15 @@ contract RewardPackages is Ownable {
         );
         // check if enough rewards on the contract for deposit
         Stake memory stake = Stake(packageId, tokenAmount, block.timestamp);
-        require(calculateRewards(stake) <= token.balanceOf(address(this)), 'Not enough rewards on contract');
+        require(
+            calculateReward(stake) <= token.balanceOf(address(this)),
+            "Not enough rewards on contract"
+        );
 
         usersStakes[msg.sender][packageId] = stake;
 
         token.transferFrom(msg.sender, address(this), tokenAmount);
-        
+
         emit TokensDeposited(msg.sender, packageId, tokenAmount);
     }
 
@@ -96,18 +99,18 @@ contract RewardPackages is Ownable {
         require(packageId < packagesAmount, "Id too high");
         Stake memory stake = usersStakes[msg.sender][packageId];
         // check if address owns this stake
-        require(
-            stake.lockTimestamp != 0,
-            "Package not in use by this address"
-        );
+        require(stake.lockTimestamp != 0, "Package not in use by this address");
         Package memory package = packages[packageId];
         // check if enough time has passed
-        require(block.timestamp - stake.lockTimestamp >= package.lockTime, "Stake still locked");
+        require(
+            block.timestamp - stake.lockTimestamp >= package.lockTime,
+            "Stake still locked"
+        );
         // delete the stake
         delete usersStakes[msg.sender][packageId];
 
         // send tokens to user
-        uint withdrawAmount = stake.tokenAmount + calculateRewards(stake);
+        uint withdrawAmount = stake.tokenAmount + calculateReward(stake);
         token.transfer(msg.sender, withdrawAmount);
 
         emit TokensWithdrawn(msg.sender, packageId);
@@ -118,13 +121,36 @@ contract RewardPackages is Ownable {
         emit RewardsAdded(amount);
     }
 
-    //todo getUserInfo() view
+    function getUserInfo(
+        address user,
+        uint packageId
+    ) external view returns (UserInfo memory) {
+        Stake memory stake = usersStakes[user][packageId];
+        return UserInfo(
+            stake.tokenAmount,
+            calculateRewardForPeriod(stake, block.timestamp - stake.lockTimestamp),
+            stake.lockTimestamp + packages[packageId].lockTime
+        );
+    }
 
-    // calculate rewards for stake
-    function calculateRewards(Stake memory stake) public view returns (uint) {
+    function getPackageInfo(
+        uint id
+    ) external view returns (Package memory) {
+        require(id < packagesAmount, "Id too high");
+        return packages[id];
+    }
+
+    // calculate reward for stake (whole period)
+    function calculateReward(Stake memory stake) private view returns (uint) {
+        Package memory package = packages[stake.packageId];
+        return calculateRewardForPeriod(stake, package.lockTime);
+    }
+
+    // e.g. get rewards for 2 weeks of staking
+    function calculateRewardForPeriod(Stake memory stake, uint periodInSeconds) private view returns (uint) {
         Package memory package = packages[stake.packageId];
 
-        uint numberOfCapitalizations = package.lockTime /
+        uint numberOfCapitalizations = periodInSeconds /
             package.awardFrequency;
         uint reward = stake.tokenAmount *
             (((package.rewardPercentage + 100) ** numberOfCapitalizations) /
