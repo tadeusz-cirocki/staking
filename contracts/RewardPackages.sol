@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-// Uncomment this line to use console.log
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -57,8 +55,6 @@ contract RewardPackages is Ownable {
         token = IERC20(tokenParam);
     }
 
-    //todo organize func order
-
     function createPackage(Package memory package) external onlyOwner {
         packages[packagesAmount] = package;
         emit PackageAdded(packagesAmount, package.name);
@@ -68,6 +64,11 @@ contract RewardPackages is Ownable {
     function disablePackage(uint id) external onlyOwner {
         packages[id].isActive = false;
         emit PackageDisabled(id);
+    }
+
+    function transferTokenForRewards(uint amount) external onlyOwner {
+        token.transferFrom(msg.sender, address(this), amount);
+        emit RewardsAdded(amount);
     }
 
     function depositTokens(uint packageId, uint tokenAmount) external {
@@ -114,11 +115,6 @@ contract RewardPackages is Ownable {
         token.transfer(msg.sender, withdrawAmount);
 
         emit TokensWithdrawn(msg.sender, packageId);
-    }
-
-    function transferTokenForRewards(uint amount) external onlyOwner {
-        token.transferFrom(msg.sender, address(this), amount);
-        emit RewardsAdded(amount);
     }
 
     function getUserInfo(
